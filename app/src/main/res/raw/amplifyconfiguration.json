@@ -1,0 +1,61 @@
+{
+  "auth": {
+    "plugins": {
+      "awsCognitoAuthPlugin": {
+        "IdentityManager": {
+          "Default": {}
+        },
+        "CredentialsProvider": {
+          "CognitoIdentity": {
+            "Default": {
+              "PoolId": "ap-northeast-2:10ce9ea0-ec67-4cd5-a0a9-92dd973689db",
+              "Region": "ap-northeast-2"
+            }
+          }
+        },
+        "CognitoUserPool": {
+          "Default": {
+            "PoolId": "ap-northeast-2_Ks4B3BZ28",
+            "AppClientId": "325s9q3r390juvlq1u6h24eefc",
+            "AppClientSecret": "1udsss59n27qt239ktrf98absi2qf0f7t5ldk9edavfcdf95s8el",
+            "Region": "ap-northeast-2"
+          }
+        },
+        "Auth": {
+          "Default": {
+            "authenticationFlowType": "USER_SRP_AUTH",
+            "OAuth": {
+              "WebDomain": "mellowing.auth.ap-northeast-2.amazoncognito.com",
+              "AppClientId": "325s9q3r390juvlq1u6h24eefc",
+              "AppClientSecret": "1udsss59n27qt239ktrf98absi2qf0f7t5ldk9edavfcdf95s8el",
+              "SignInRedirectURI": "myapp://",
+              "SignOutRedirectURI": "myapp://",
+              "Scopes": [
+                "email",
+                "openid"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "api": {
+    "plugins": {
+      "awsAPIPlugin": {
+        "DeviceApi": {
+          "endpointType": "REST",
+          "endpoint": "https://prod.mellowingfac.com",
+          "region": "ap-northeast-2",
+          "authorizationType": "AMAZON_COGNITO_USER_POOLS"
+        },
+        "SoundApi": {
+          "endpointType": "REST",
+          "endpoint": "https:/frontend-api-prod.mellowingfac.com",
+          "region": "ap-northeast-2",
+          "authorizationType": "AMAZON_COGNITO_USER_POOLS"
+        }
+      }
+    }
+  }
+}
