@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.mellowingfactory.sleepology.ui.theme.fontSemiBold20
 import com.mellowingfactory.sleepology.viewmodel.AuthViewModel
 
 @Composable
