@@ -2,9 +2,12 @@ package com.mellowingfactory.sleepology.services
 
 import android.content.Context
 import android.util.Log
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Amplify
 import com.mellowingfactory.sleepology.models.*
 
@@ -67,8 +70,20 @@ class AmplifyServiceImpl: AmplifyService {
 
     override fun fetchCurrentAuthSession(onComplete: () -> Unit) {
         Amplify.Auth.fetchAuthSession(
-            { Log.i("Sleepology", "Is signed in: ${it.isSignedIn}") },
-            { Log.e("Sleepology", "Failed to fetch session", it) }
+            {
+                val session = it as AWSCognitoAuthSession
+                when (session.identityId.type) {
+                    AuthSessionResult.Type.SUCCESS -> {
+                        Log.i("AuthQuickStart", "IdentityId = ${session.identityId.value}")
+                        // Need tokens for recording sound and upload to the server
+                        println(session.userPoolTokens.value?.accessToken)
+                    }
+
+                    AuthSessionResult.Type.FAILURE ->
+                        Log.w("AuthQuickStart", "IdentityId not found", session.identityId.error)
+                }
+            },
+            { Log.e("AuthQuickStart", "Failed to fetch session", it) }
         )
     }
 
