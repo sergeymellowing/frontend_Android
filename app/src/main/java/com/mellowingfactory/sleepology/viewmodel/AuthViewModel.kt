@@ -1,5 +1,6 @@
 package com.mellowingfactory.sleepology.viewmodel
 
+import android.app.Activity
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -81,6 +82,14 @@ class AuthViewModel: ViewModel() {
         amplifyService.logOut {
             viewModelScope.launch(Dispatchers.Main) {
                 navigateTo("login")
+            }
+        }
+    }
+
+    fun loginWithProvider() {
+        amplifyService.loginWithProvider() {
+            viewModelScope.launch(Dispatchers.Main) {
+                navigateTo("session")
             }
         }
     }
