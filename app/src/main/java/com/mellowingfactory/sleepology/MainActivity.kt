@@ -23,10 +23,12 @@ import com.mellowingfactory.sleepology.ui.auth.*
 import com.mellowingfactory.sleepology.ui.theme.SleepologyTheme
 import com.mellowingfactory.sleepology.viewmodel.AuthViewModel
 import com.mellowingfactory.sleepology.viewmodel.StatisticsViewModel
+import com.mellowingfactory.sleepology.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<AuthViewModel>()
     private val statisticsViewModel by viewModels<StatisticsViewModel>()
+    private val userViewModel by viewModels<UserViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +73,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("session") {
-                SessionScreen(viewModel = viewModel, statisticsViewModel = statisticsViewModel)
+                SessionScreen(viewModel = viewModel, statisticsViewModel = statisticsViewModel, userViewModel = userViewModel)
             }
         }
     }

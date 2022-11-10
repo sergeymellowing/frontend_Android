@@ -2,14 +2,12 @@ package com.mellowingfactory.sleepology.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.mellowingfactory.sleepology.models.LoginState
 import com.mellowingfactory.sleepology.models.Timeframe
-import com.mellowingfactory.sleepology.services.AmplifyService
-import com.mellowingfactory.sleepology.services.AmplifyServiceImpl
+import com.mellowingfactory.sleepology.services.ApiNodeServer
 import java.util.*
 
 class StatisticsViewModel: ViewModel() {
-    private val amplifyService: AmplifyService = AmplifyServiceImpl()
+    private val apiNodeServer: ApiNodeServer = ApiNodeServer()
     var journalDate = mutableStateOf(Date())
         private set
 
@@ -17,8 +15,8 @@ class StatisticsViewModel: ViewModel() {
         private set
 
     fun getStatistics() {
-        amplifyService.getStatistics(journalDate.value, timeframe.value) {
-            // MARK: On complete closer
+        apiNodeServer.getStatistics(journalDate.value, timeframe.value) { statistics ->
+            // TODO: Do something with $statistics
         }
     }
 }

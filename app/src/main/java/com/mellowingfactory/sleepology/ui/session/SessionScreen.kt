@@ -13,10 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mellowingfactory.sleepology.viewmodel.AuthViewModel
 import com.mellowingfactory.sleepology.viewmodel.StatisticsViewModel
+import com.mellowingfactory.sleepology.viewmodel.UserViewModel
 
 
 @Composable
-fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewModel) {
+fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewModel, userViewModel: UserViewModel) {
     val scrollableState = ScrollableState { 1f }
 
     Column(
@@ -39,5 +40,12 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
             Text(text = "Get Statistics")
         }
 
+        Button(onClick = { userViewModel.getUser(viewModel.username.value) }) {
+            Text(text = "Get User")
+        }
+
+        Button(onClick = { userViewModel.fetchAuthUserAttributes() {} }) {
+            Text(text = "Get User Attributes")
+        }
     }
 }

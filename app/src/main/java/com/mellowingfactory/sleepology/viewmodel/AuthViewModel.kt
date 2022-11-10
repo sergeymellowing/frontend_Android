@@ -1,6 +1,5 @@
 package com.mellowingfactory.sleepology.viewmodel
 
-import android.app.Activity
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -11,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AuthViewModel: ViewModel() {
-    private val amplifyService: AmplifyService = AmplifyServiceImpl()
+    private val apiNodeServer: ApiNodeServer = ApiNodeServer()
 
     lateinit var navigateTo: (String) -> Unit
 
@@ -24,12 +23,21 @@ class AuthViewModel: ViewModel() {
     var verificationState = mutableStateOf(VerificationState())
         private set
 
-    fun updateSignUpState(username: String? = null, email: String? = null, password: String? = null) {
-        username?.let {
-            signUpState.value = signUpState.value.copy(username = it)
+    var username = mutableStateOf("")
+        private set
+
+    fun updateSignUpState(name: String? = null,
+                          familyName: String? = null,
+                          marketing: Boolean? = true,
+                          email: String? = null,
+                          password: String? = null) {
+        email?.let {
+            signUpState.value = signUpState.value.copy(email = it)
             verificationState.value = verificationState.value.copy(username = it)
         }
-        email?.let { signUpState.value = signUpState.value.copy(email = it) }
+        name?.let { signUpState.value = signUpState.value.copy(name = it) }
+        familyName?.let { signUpState.value = signUpState.value.copy(familyName = it) }
+        marketing?.let { signUpState.value = signUpState.value.copy(marketing = it) }
         password?.let { signUpState.value = signUpState.value.copy(password = it) }
     }
 
@@ -43,7 +51,7 @@ class AuthViewModel: ViewModel() {
     }
 
     fun configureAmplify(context: Context) {
-        amplifyService.configureAmplify(context)
+        apiNodeServer.configureAmplify(context)
     }
 
     fun showSignUp() {
@@ -55,7 +63,7 @@ class AuthViewModel: ViewModel() {
     }
 
     fun signUp() {
-        amplifyService.signUp(signUpState.value) {
+        apiNodeServer.signUp(signUpState.value) {
             viewModelScope.launch(Dispatchers.Main) {
                 navigateTo("verify")
             }
@@ -63,7 +71,7 @@ class AuthViewModel: ViewModel() {
     }
 
     fun verifyCode() {
-        amplifyService.verifyCode(verificationState.value) {
+        apiNodeServer.verifyCode(verificationState.value) {
             viewModelScope.launch(Dispatchers.Main) {
                 navigateTo("login")
             }
@@ -71,15 +79,20 @@ class AuthViewModel: ViewModel() {
     }
 
     fun login() {
-        amplifyService.login(loginState.value) {
+        apiNodeServer.login(loginState.value) {
             viewModelScope.launch(Dispatchers.Main) {
-                navigateTo("session")
+                if (it) {
+                    navigateTo("session")
+                } else {
+                    navigateTo("login")
+                }
+
             }
         }
     }
 
     fun logOut() {
-        amplifyService.logOut {
+        apiNodeServer.logOut {
             viewModelScope.launch(Dispatchers.Main) {
                 navigateTo("login")
             }
@@ -87,7 +100,7 @@ class AuthViewModel: ViewModel() {
     }
 
     fun loginWithProvider() {
-        amplifyService.loginWithProvider() {
+        apiNodeServer.loginWithProvider() {
             viewModelScope.launch(Dispatchers.Main) {
                 navigateTo("session")
             }
@@ -95,9 +108,15 @@ class AuthViewModel: ViewModel() {
     }
 
     fun getCurrentAuthSession() {
-        amplifyService.fetchCurrentAuthSession {
+        apiNodeServer.fetchCurrentAuthSession { name, session ->
+            name?.let { username.value = name }
             viewModelScope.launch(Dispatchers.Main) {
-                navigateTo("session")
+                if (session.isSignedIn) {
+                    navigateTo("session")
+                } else {
+                    navigateTo("login")
+                }
+
             }
         }
     }

@@ -1,9 +1,11 @@
 package com.mellowingfactory.sleepology.models
 
 data class SignUpState(
-    var username: String = "",
     var email: String = "",
-    var password: String = ""
+    var password: String = "",
+    var name: String = "",
+    var familyName: String = "",
+    var marketing: Boolean = true
 )
 
 data class LoginState(
