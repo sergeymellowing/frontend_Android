@@ -14,8 +14,8 @@ class StatisticsViewModel: ViewModel() {
     var timeframe = mutableStateOf(Timeframe.weekly)
         private set
 
-    fun getStatistics() {
-        apiNodeServer.getStatistics(journalDate.value, timeframe.value) { statistics ->
+    fun getStatistics(date: Date? = null, timeframe: Timeframe? = Timeframe.weekly) {
+        apiNodeServer.getStatistics(date, timeframe) { statistics ->
             // TODO: Do something with $statistics
         }
     }

@@ -14,14 +14,25 @@ class UserViewModel: ViewModel() {
 //    var user = mutableStateOf(ApiNodeUser())
 //        private set
 
+    var user = mutableStateOf(ApiNodeUser())
+        private set
+
     fun getUser(username: String) {
-        apiNodeServer.getUser(username) { user ->
-            // TODO: Do something with $user
+        apiNodeServer.getUser(username) { fetchedUser ->
+            if (fetchedUser != null) {
+                user.value = fetchedUser
+            }
         }
     }
 
     fun createUser(user: ApiNodeUser) {
         apiNodeServer.createUser(user) { bool ->
+            // TODO: Do something with $bool
+        }
+    }
+
+    fun updateUser(id: String, user: ApiNodeUser) {
+        apiNodeServer.updateUser(id, user) { bool ->
             // TODO: Do something with $bool
         }
     }

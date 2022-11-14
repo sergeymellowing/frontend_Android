@@ -11,5 +11,19 @@ data class ApiNodeUser (
     var marketing: Boolean? = null,
     var gender: String? = null,
     var created: String? = null,
-    var updated: String? = null
+    var updated: String? = null,
+    var offset: Int? = null
+)
+
+data class CreateApiNodeUserRequest (
+    val item: ApiNodeUser
+    )
+
+data class GetApiNodeUserResponse (
+    val data: ApiNodeUser
+)
+
+data class UpdateApiNodeUserRequest (
+    val id: String,
+    val item: ApiNodeUser
 )

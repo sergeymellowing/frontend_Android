@@ -2,6 +2,8 @@ package com.mellowingfactory.sleepology.services
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.AuthSession
@@ -140,14 +142,14 @@ class ApiNodeServer {
 
     fun getStatistics(
         journalDate: Date?,
-        timeFrame: Timeframe,
+        timeFrame: Timeframe? = Timeframe.weekly,
         onComplete: (StatisticsResponse?) -> Unit
     ) {
         val timeZoneOffset = Fun.getTimezoneOffset()
 
-        val formattedDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(journalDate)
         var journalDateString: String? = null
         if (journalDate != null) {
+            val formattedDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(journalDate)
             journalDateString = formattedDate.toString()
         }
 
@@ -193,36 +195,69 @@ class ApiNodeServer {
                 val result = it.data.asJSONObject().toString()
                 println(result)
                 val gson = Gson()
-                val user = gson.fromJson(result, ApiNodeUser::class.java)
-                Log.i("MyAmplifyApp", "GET apiNodeUser succeeded: $user")
-                onComplete(user)
+                val userResponse = gson.fromJson(result, GetApiNodeUserResponse::class.java)
+
+                Log.i("MyAmplifyApp", "GET apiNodeUser succeeded: $userResponse")
+                onComplete(userResponse.data)
             }, {
                 Log.e("MyAmplifyApp", "GET apiNodeUser failed.", it)
                 onComplete(null)
             })
     }
 
-    fun createUser(user: ApiNodeUser, onComplete: (Boolean) -> Unit) {
-        val getUserRequest = mapOf("item" to user)
+    fun updateUser(id: String, user: ApiNodeUser, onComplete: (Boolean) -> Unit) {
+        val updateApiNodeUserRequest = UpdateApiNodeUserRequest(id, user)
         val gson = Gson()
-        val body = gson.toJson(getUserRequest).toByteArray()
+        val jsonObject = gson.toJson(updateApiNodeUserRequest)
+        val body = jsonObject.toString().toByteArray()
+        println("updateApiNodeUserRequest $updateApiNodeUserRequest")
+        println("jsonObject $jsonObject")
+        val request = RestOptions.builder()
+            .addPath("/user/update")
+            .addBody(body)
+            .build()
+
+        Amplify.API.post(API_NAME, request,
+            {
+                val result = it.data.asJSONObject().toString()
+                Log.i("MyAmplifyApp", "UPDATE apiNodeUser succeeded: $result")
+                onComplete(true)
+            }, {
+                Log.e("MyAmplifyApp", "UPDATE apiNodeUser failed.", it)
+                onComplete(false)
+            })
+    }
+
+    fun createUser(user: ApiNodeUser, onComplete: (Boolean) -> Unit) {
+        val getUserRequest = CreateApiNodeUserRequest(item = user)
+        val gson = Gson()
+        val jsonObject = gson.toJson(getUserRequest)
+        val body = jsonObject.toString().toByteArray()
         val request = RestOptions.builder()
             .addPath("/user/create")
             .addBody(body)
             .build()
-        println(getUserRequest)
-        println(body)
 
+        println("getUserRequest $getUserRequest")
+        println("jsonObject $jsonObject")
 
-        Amplify.API.post(API_NAME, request,
-            {
-                val result = gson.toJson(it.data)
-                Log.i("MyAmplifyApp", "CREATE apiNodeUser succeeded: $result")
-                onComplete(true)
-            }, {
-                Log.e("MyAmplifyApp", "CREATE apiNodeUser failed.", it)
-                onComplete(false)
-            })
+        try {
+            Amplify.API.post(API_NAME, request,
+                {
+                    val result = it.toString()
+                    val code = it.code
+                    println("code $result")
+                    println("code $code")
+                    Log.i("MyAmplifyApp", "CREATE apiNodeUser succeeded: $result")
+                    onComplete(true)
+                }, {
+                    Log.e("MyAmplifyApp", "CREATE apiNodeUser failed.", it)
+                    onComplete(false)
+                })
+        } catch (error: ApiException) {
+            Log.e("MyAmplifyApp", "CREATE apiNodeUser failed.", error)
+        }
+
     }
 
     fun fetchAuthUserAttributes(onComplete: (List<AuthUserAttribute>) -> Unit) {
@@ -262,32 +297,12 @@ class ApiNodeServer {
                             onComplete(success)
                         }
                     } else {
-                        updateUser(username, it) { success ->
+                        updateUser(id = username, user = user) { success ->
                             onComplete(success)
                         }
                     }
                 }
             }
         }
-    }
-
-    private fun updateUser(id: String, user: ApiNodeUser, onComplete: (Boolean) -> Unit) {
-        val getUserRequest = mapOf("id" to id, "item" to user)
-        val gson = Gson()
-        val body = gson.toJson(getUserRequest).toByteArray()
-        val request = RestOptions.builder()
-            .addPath("/user/update")
-            .addBody(body)
-            .build()
-
-        Amplify.API.post(API_NAME, request,
-            {
-                val result = it.data.asJSONObject().toString()
-                Log.i("MyAmplifyApp", "UPDATE apiNodeUser succeeded: $result")
-                onComplete(true)
-            }, {
-                Log.e("MyAmplifyApp", "UPDATE apiNodeUser failed.", it)
-                onComplete(false)
-            })
     }
 }
