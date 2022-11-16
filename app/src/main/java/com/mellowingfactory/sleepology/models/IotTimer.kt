@@ -18,5 +18,5 @@ data class IotTimer (
     var isSnoozed: Boolean? = null,
 
     var lastSnooze: String? = null,
-    var isSuppressed: Boolean? = null,
-        )
+    var isSuppressed: Boolean? = null
+)

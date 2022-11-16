@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amplifyframework.auth.AuthUser
 import com.mellowingfactory.sleepology.models.*
 import com.mellowingfactory.sleepology.services.*
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +24,7 @@ class AuthViewModel: ViewModel() {
     var verificationState = mutableStateOf(VerificationState())
         private set
 
-    var username = mutableStateOf("")
+    var authUser = mutableStateOf(AuthUser("", ""))
         private set
 
     fun updateSignUpState(name: String? = null,
@@ -108,8 +109,10 @@ class AuthViewModel: ViewModel() {
     }
 
     fun getCurrentAuthSession(onComplete: (Boolean) -> Unit) {
-        apiNodeServer.fetchCurrentAuthSession { name, session ->
-            name?.let { username.value = name }
+        apiNodeServer.fetchCurrentAuthSession { user, session ->
+            user?.let {
+                authUser.value = user
+            }
             viewModelScope.launch(Dispatchers.Main) {
                 if (session.isSignedIn) {
                     navigateTo("session")

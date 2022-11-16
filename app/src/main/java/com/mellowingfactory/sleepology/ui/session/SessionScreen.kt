@@ -117,7 +117,7 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
         Spacer(modifier = Modifier.height(100.dp))
 
 
-        Button(onClick = { userViewModel.getUser(viewModel.username.value) }) {
+        Button(onClick = { userViewModel.getUser(viewModel.authUser.value.username) }) {
             Text(text = "Get User")
         }
 
@@ -126,13 +126,13 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
         }
 
         Button(onClick = {
-            userViewModel.updateUser(viewModel.username.value, userViewModel.user.value)
+            userViewModel.updateUser(viewModel.authUser.value.username, userViewModel.user.value)
         }) {
             Text(text = "Update User Manually")
         }
 
         Button(onClick = {
-            userViewModel.deleteUser(viewModel.username.value)
+            userViewModel.deleteUser(viewModel.authUser.value.username)
         }) {
             Text(text = "Delete User")
         }
@@ -141,7 +141,7 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
         Spacer(modifier = Modifier.height(100.dp))
 
 
-        Button(onClick = { deviceViewModel.getDevice(viewModel.username.value) }) {
+        Button(onClick = { deviceViewModel.getDevice(viewModel.authUser.value.username) }) {
             Text(text = "Get Device")
         }
 
@@ -161,7 +161,6 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
 //            Text(text = "Delete User")
 //        }
 
-    // TODO: FIX ME E/AndroidRuntime: FATAL EXCEPTION: OkHttp Dispatcher
         Button(onClick = { deviceViewModel.device.value.id?.let { deviceViewModel.getTimer(it) } }) {
             Text(text = "Get Timer")
         }

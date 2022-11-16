@@ -6,6 +6,7 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.AuthSession
+import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
@@ -118,7 +119,7 @@ class ApiNodeServer {
         )
     }
 
-    fun fetchCurrentAuthSession(onComplete: (String?, AuthSession) -> Unit) {
+    fun fetchCurrentAuthSession(onComplete: (AuthUser?, AuthSession) -> Unit) {
         Amplify.Auth.fetchAuthSession(
             {
                 val session = it as AWSCognitoAuthSession
@@ -130,8 +131,8 @@ class ApiNodeServer {
                         println("access token: ${tokens?.accessToken}")
                         println("idToken: ${tokens?.idToken}")
                         println("refresh Token: ${tokens?.refreshToken}")
-                        val username = Amplify.Auth.currentUser.username
-                        onComplete(username, session)
+                        val user = Amplify.Auth.currentUser
+                        onComplete(user, session)
                     }
 
                     AuthSessionResult.Type.FAILURE -> {
@@ -389,33 +390,36 @@ class ApiNodeServer {
     }
 
     fun getDevice(id: String, onComplete: (IotDevice?) -> Unit) {
-        val queryParameters = mapOf("u_id" to id)
-        val request = RestOptions.builder()
-            .addPath("/device/query")
-            .addQueryParameters(queryParameters)
-            .build()
+        if (id.isNotEmpty()) {
+            val queryParameters = mapOf("u_id" to id)
+            val request = RestOptions.builder()
+                .addPath("/device/query")
+                .addQueryParameters(queryParameters)
+                .build()
 
-        println(queryParameters)
+            println(queryParameters)
 
-        Amplify.API.get(API_NAME, request,
-            {
-                val result = it.data.asJSONObject().getJSONArray("data")
-                        if (result.length() > 0) {
-                            val jsonObject = result.getJSONObject(0).toString()
-                            val gson = Gson()
-                            val device = gson.fromJson(jsonObject, IotDevice::class.java)
-                            Log.i("MyAmplifyApp", "GET device succeeded: $device")
-                            onComplete(device)
-                        } else {
-                            Log.i("MyAmplifyApp", "GET device succeeded. But device list is empty")
-                            onComplete(null)
-                        }
-            },
-            {
-                Log.e("MyAmplifyApp", "GET device failed.", it)
-                onComplete(null)
-            }
-        )
+            Amplify.API.get(API_NAME, request,
+                {
+                    val result = it.data.asJSONObject().getJSONArray("data")
+                    if (result.length() > 0) {
+                        val jsonObject = result.getJSONObject(0).toString()
+                        val gson = Gson()
+                        val device = gson.fromJson(jsonObject, IotDevice::class.java)
+                        Log.i("MyAmplifyApp", "GET device succeeded: $device")
+                        onComplete(device)
+                    } else {
+                        Log.i("MyAmplifyApp", "GET device succeeded. But device list is empty")
+                        onComplete(null)
+                    }
+                },
+                {
+                    Log.e("MyAmplifyApp", "GET device failed.", it)
+                    onComplete(null)
+                }
+            )
+        }
+
     }
 
     fun updateDevice(id: String, device: IotDevice, onComplete: (Boolean) -> Unit) {
