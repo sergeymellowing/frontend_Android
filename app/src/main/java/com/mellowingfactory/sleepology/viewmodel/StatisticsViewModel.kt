@@ -19,4 +19,10 @@ class StatisticsViewModel: ViewModel() {
             // TODO: Do something with $statistics
         }
     }
+
+    fun getJournal(date: Date) {
+        apiNodeServer.getJournal(date) { journal ->
+            // TODO: Do something with $journal
+        }
+    }
 }

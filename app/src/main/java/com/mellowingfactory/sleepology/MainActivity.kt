@@ -1,27 +1,22 @@
 package com.mellowingfactory.sleepology
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.telephony.MbmsDownloadSession.RESULT_CANCELLED
-import android.telephony.SmsManager.RESULT_CANCELLED
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Amplify
 import com.mellowingfactory.sleepology.ui.auth.*
+import com.mellowingfactory.sleepology.ui.session.LoadingScreen
+import com.mellowingfactory.sleepology.ui.session.SessionScreen
 import com.mellowingfactory.sleepology.ui.theme.SleepologyTheme
 import com.mellowingfactory.sleepology.viewmodel.AuthViewModel
+import com.mellowingfactory.sleepology.viewmodel.DeviceViewModel
 import com.mellowingfactory.sleepology.viewmodel.StatisticsViewModel
 import com.mellowingfactory.sleepology.viewmodel.UserViewModel
 
@@ -29,12 +24,18 @@ class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<AuthViewModel>()
     private val statisticsViewModel by viewModels<StatisticsViewModel>()
     private val userViewModel by viewModels<UserViewModel>()
+    private val deviceViewModel by viewModels<DeviceViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         viewModel.configureAmplify(this)
-        viewModel.getCurrentAuthSession()
+        viewModel.getCurrentAuthSession {
+            if (it) {
+                userViewModel.getUser(Amplify.Auth.currentUser.username)
+                deviceViewModel.getDevice(Amplify.Auth.currentUser.username)
+            }
+        }
 
         setContent {
             SleepologyTheme {
@@ -59,7 +60,11 @@ class MainActivity : ComponentActivity() {
             navController.navigate(it)
         }
 
-        NavHost(navController = navController, startDestination = "session") {
+        NavHost(navController = navController, startDestination = "loading") {
+            composable("loading") {
+                LoadingScreen(viewModel = viewModel)
+            }
+
             composable("login") {
                 LoginScreen(viewModel = viewModel)
             }
@@ -73,7 +78,12 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("session") {
-                SessionScreen(viewModel = viewModel, statisticsViewModel = statisticsViewModel, userViewModel = userViewModel)
+                SessionScreen(
+                    viewModel = viewModel,
+                    statisticsViewModel = statisticsViewModel,
+                    userViewModel = userViewModel,
+                    deviceViewModel = deviceViewModel
+                )
             }
         }
     }

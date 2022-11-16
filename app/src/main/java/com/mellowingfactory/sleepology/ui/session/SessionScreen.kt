@@ -1,4 +1,4 @@
-package com.mellowingfactory.sleepology.ui.auth
+package com.mellowingfactory.sleepology.ui.session
 
 import android.app.DatePickerDialog
 import android.util.Log
@@ -31,6 +31,7 @@ import com.mellowingfactory.sleepology.models.Timeframe
 import com.mellowingfactory.sleepology.models.UpdateApiNodeUserRequest
 import com.mellowingfactory.sleepology.static.API_NAME
 import com.mellowingfactory.sleepology.viewmodel.AuthViewModel
+import com.mellowingfactory.sleepology.viewmodel.DeviceViewModel
 import com.mellowingfactory.sleepology.viewmodel.StatisticsViewModel
 import com.mellowingfactory.sleepology.viewmodel.UserViewModel
 import org.json.JSONObject
@@ -38,16 +39,16 @@ import java.util.*
 
 
 @Composable
-fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewModel, userViewModel: UserViewModel) {
+fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewModel, userViewModel: UserViewModel, deviceViewModel: DeviceViewModel) {
     val mContext = LocalContext.current
     val scrollableState = rememberScrollState()
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(1.dp, alignment = Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp)
+            .padding(30.dp)
             .verticalScroll(scrollableState),
     ) {
         Text(text = "YOU HAVE LOGGED IN")
@@ -74,34 +75,14 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
             statisticsViewModel.journalDate.value = newDate.time // setting new date
         }, thisAYear, thisAMonth, thisADay)
 
-//        val mYear: Int
-//        val mMonth: Int
-//        val mDay: Int
-//        val mCalendar = Calendar.getInstance()
-//        mYear = mCalendar.get(Calendar.YEAR)
-//        mMonth = mCalendar.get(Calendar.MONTH)
-//        mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
-//        mCalendar.time = Date()
-//        val mDate = remember { mutableStateOf("") }
-//
-//        val mDatePickerDialog = DatePickerDialog(mContext,
-//            { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
-//
-////                mDate.value = "$mDayOfMonth/${mMonth+1}/$mYear"
-//            }, mYear, mMonth, mDay
-//        )
-//
-
             Button(onClick = {
                 dpd.show()
             }, colors = ButtonDefaults.buttonColors(backgroundColor = Color(0XFF0F9D58)) ) {
                 Text(text = "Open Date Picker", color = Color.White)
             }
 
-            Text(text = "Selected Date: ${statisticsViewModel.journalDate.value}", fontSize = 30.sp, textAlign = TextAlign.Center)
+            Text(text = "Selected Date: ${statisticsViewModel.journalDate.value}", textAlign = TextAlign.Center)
 
-        // TODO: pass journalDate
-        // TODO: pass timeframe
         Button(onClick = {
             statisticsViewModel.getStatistics()
         }) {
@@ -126,6 +107,12 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
             Text(text = "Get Yearly Statistics")
         }
 
+        Button(onClick = {
+            statisticsViewModel.getJournal(statisticsViewModel.journalDate.value)
+        }) {
+            Text(text = "Get Journal")
+        }
+
 
         Spacer(modifier = Modifier.height(100.dp))
 
@@ -143,5 +130,41 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
         }) {
             Text(text = "Update User Manually")
         }
+
+        Button(onClick = {
+            userViewModel.deleteUser(viewModel.username.value)
+        }) {
+            Text(text = "Delete User")
+        }
+
+
+        Spacer(modifier = Modifier.height(100.dp))
+
+
+        Button(onClick = { deviceViewModel.getDevice(viewModel.username.value) }) {
+            Text(text = "Get Device")
+        }
+
+        Button(onClick = {
+            val testingMode = 3
+            println(userViewModel.user.value.id)
+            userViewModel.user.value.id?.let {
+                deviceViewModel.updateDevice(testingMode, it)
+            }
+        }) {
+            Text(text = "Update Device")
+        }
+//
+//        Button(onClick = {
+//            userViewModel.deleteUser(viewModel.username.value)
+//        }) {
+//            Text(text = "Delete User")
+//        }
+
+    // TODO: FIX ME E/AndroidRuntime: FATAL EXCEPTION: OkHttp Dispatcher
+        Button(onClick = { deviceViewModel.device.value.id?.let { deviceViewModel.getTimer(it) } }) {
+            Text(text = "Get Timer")
+        }
+
     }
 }

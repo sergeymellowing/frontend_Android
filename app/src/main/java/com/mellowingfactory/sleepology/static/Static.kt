@@ -17,3 +17,4 @@ class Fun {
 }
 
 const val API_NAME = "DeviceApi"
+const val DEFAULT_DURATION_MINUTES = 30

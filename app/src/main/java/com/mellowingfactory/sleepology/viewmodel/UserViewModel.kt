@@ -37,6 +37,12 @@ class UserViewModel: ViewModel() {
         }
     }
 
+    fun deleteUser(id: String) {
+        apiNodeServer.deleteUser(id) { bool ->
+            // TODO: Do something with $bool
+        }
+    }
+
     fun fetchAuthUserAttributes(onComplete: (List<AuthUserAttribute>) -> Unit) {
         apiNodeServer.fetchAuthUserAttributes { attributes ->
             onComplete(attributes)

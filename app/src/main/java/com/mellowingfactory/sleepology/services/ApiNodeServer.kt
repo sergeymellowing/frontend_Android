@@ -2,10 +2,10 @@ package com.mellowingfactory.sleepology.services
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
+import com.amplifyframework.api.rest.RestResponse.Data
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -15,12 +15,14 @@ import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Amplify
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.mellowingfactory.sleepology.models.*
 import com.mellowingfactory.sleepology.static.API_NAME
 import com.mellowingfactory.sleepology.static.Fun
-import com.mellowingfactory.sleepology.viewmodel.UserViewModel
+import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 //interface ApiNodeServer {
 //    fun configureAmplify(context: Context)
@@ -125,7 +127,10 @@ class ApiNodeServer {
                     AuthSessionResult.Type.SUCCESS -> {
                         Log.i("AuthQuickStart", "IdentityId = ${session.identityId.value}")
                         // TODO: tokens for recording sound and upload to the server
-                        println(session.userPoolTokens.value?.accessToken)
+                        val tokens = session.userPoolTokens.value
+                        println("access token: ${tokens?.accessToken}")
+                        println("idToken: ${tokens?.idToken}")
+                        println("refresh Token: ${tokens?.refreshToken}")
                         val username = Amplify.Auth.currentUser.username
                         onComplete(username, session)
                     }
@@ -182,6 +187,46 @@ class ApiNodeServer {
         )
     }
 
+    fun getJournal(
+        journalDate: Date?,
+        onComplete: (JournalResponse?) -> Unit
+    ) {
+        val timeZoneOffset = Fun.getTimezoneOffset()
+
+        var journalDateString: String? = null
+        if (journalDate != null) {
+            val formattedDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(journalDate)
+            journalDateString = formattedDate.toString()
+        }
+
+
+        val queryParameters = mapOf(
+            "journalDate" to journalDateString,
+            "timeZoneOffset" to timeZoneOffset
+        )
+
+        println("queryParameters: $queryParameters")
+
+        val request = RestOptions.builder()
+            .addPath("/statistics/journal/query")
+            .addQueryParameters(queryParameters)
+            .build()
+
+        Amplify.API.get(API_NAME, request,
+            {
+                val result = it.data.asJSONObject().getJSONObject("data").toString()
+                val gson = Gson()
+                val journal = gson.fromJson(result, JournalResponse::class.java)
+                Log.i("MyAmplifyApp", "GET journal succeeded: $journal")
+                onComplete(journal)
+            },
+            {
+                Log.e("MyAmplifyApp", "GET journal failed.", it)
+                onComplete(null)
+            }
+        )
+    }
+
     fun getUser(id: String, onComplete: (ApiNodeUser?) -> Unit) {
         val queryParams = mapOf("id" to id)
         val request = RestOptions.builder()
@@ -210,8 +255,10 @@ class ApiNodeServer {
         val gson = Gson()
         val jsonObject = gson.toJson(updateApiNodeUserRequest)
         val body = jsonObject.toString().toByteArray()
+        val data = Data(body)
         println("updateApiNodeUserRequest $updateApiNodeUserRequest")
         println("jsonObject $jsonObject")
+        println("body ${String(body, Charsets.UTF_8)}")
         val request = RestOptions.builder()
             .addPath("/user/update")
             .addBody(body)
@@ -219,6 +266,7 @@ class ApiNodeServer {
 
         Amplify.API.post(API_NAME, request,
             {
+                println(request)
                 val result = it.data.asJSONObject().toString()
                 Log.i("MyAmplifyApp", "UPDATE apiNodeUser succeeded: $result")
                 onComplete(true)
@@ -257,6 +305,40 @@ class ApiNodeServer {
         } catch (error: ApiException) {
             Log.e("MyAmplifyApp", "CREATE apiNodeUser failed.", error)
         }
+    }
+
+    fun deleteUser(id: String, onComplete: (Boolean) -> Unit) {
+        val queryParameters = mapOf("id" to id)
+        val request = RestOptions.builder()
+            .addPath("/user/delete")
+            .addQueryParameters(queryParameters)
+            .build()
+
+        Amplify.API.delete(API_NAME, request,
+            {
+                val result = it.toString()
+                val code = it.code
+                println("code $result")
+                println("code $code")
+                // TODO: getting error code 404. Permissions
+                Log.i("MyAmplifyApp", "DELETE DB user succeeded: $it")
+                Amplify.Auth.deleteUser(
+                    {
+                        logOut { onComplete(true) }
+                        Log.i("AuthQuickStart", "Delete Cognito user succeeded")
+                    },
+                    {
+                        Log.e("AuthQuickStart", "Delete Cognito user failed with error", it)
+                        onComplete(false)
+                    }
+                )
+            },
+            {
+                Log.e("MyAmplifyApp", "DELETE DB user failed.", it)
+                onComplete(false)
+            }
+        )
+
 
     }
 
@@ -304,5 +386,88 @@ class ApiNodeServer {
                 }
             }
         }
+    }
+
+    fun getDevice(id: String, onComplete: (IotDevice?) -> Unit) {
+        val queryParameters = mapOf("u_id" to id)
+        val request = RestOptions.builder()
+            .addPath("/device/query")
+            .addQueryParameters(queryParameters)
+            .build()
+
+        println(queryParameters)
+
+        Amplify.API.get(API_NAME, request,
+            {
+                val result = it.data.asJSONObject().getJSONArray("data")
+                        if (result.length() > 0) {
+                            val jsonObject = result.getJSONObject(0).toString()
+                            val gson = Gson()
+                            val device = gson.fromJson(jsonObject, IotDevice::class.java)
+                            Log.i("MyAmplifyApp", "GET device succeeded: $device")
+                            onComplete(device)
+                        } else {
+                            Log.i("MyAmplifyApp", "GET device succeeded. But device list is empty")
+                            onComplete(null)
+                        }
+            },
+            {
+                Log.e("MyAmplifyApp", "GET device failed.", it)
+                onComplete(null)
+            }
+        )
+    }
+
+    fun updateDevice(id: String, device: IotDevice, onComplete: (Boolean) -> Unit) {
+        val updateIotDeviceRequest = UpdateIotDeviceRequest(id, UpdateBody(device.id!!, device.rev!!, device.fv!!, device.mode))
+        val gson = Gson()
+        val jsonObject = gson.toJson(updateIotDeviceRequest)
+        val body = jsonObject.toString().toByteArray()
+        println("updateIotDeviceRequest $updateIotDeviceRequest")
+        println("jsonObject $jsonObject")
+        val request = RestOptions.builder()
+            .addPath("/device/update")
+            .addBody(body)
+            .build()
+
+        Amplify.API.post(API_NAME, request,
+            {
+                val result = it.data.asJSONObject().toString()
+                Log.i("MyAmplifyApp", "UPDATE device succeeded: $result")
+                onComplete(true)
+            }, {
+                Log.e("MyAmplifyApp", "UPDATE device failed.", it)
+                onComplete(false)
+            })
+    }
+
+    fun getTimer(d_id: String, onComplete: (List<IotTimer>?) -> Unit) {
+        val queryParameters = mapOf("d_id" to d_id)
+        val request = RestOptions.builder()
+            .addPath("/timer/query")
+            .addQueryParameters(queryParameters)
+            .build()
+
+        println(queryParameters)
+
+        Amplify.API.get(API_NAME, request,
+            {
+                val result = it.data.asJSONObject().getJSONArray("data")
+                if (result.length() > 0) {
+                    val gson = Gson()
+                    val listType: Type = object : TypeToken<ArrayList<IotTimer?>?>() {}.type
+                    val timers: List<IotTimer> = gson.fromJson(result.toString(), listType)
+                    Log.i("MyAmplifyApp", "GET timer succeeded: $timers")
+                    onComplete(timers)
+                } else {
+                    Log.i("MyAmplifyApp", "GET timer succeeded. But timer list is empty")
+                    onComplete(null)
+                }
+            },
+            {
+                Log.e("MyAmplifyApp", "GET timer failed.", it)
+                onComplete(null)
+            }
+        )
     }
 }

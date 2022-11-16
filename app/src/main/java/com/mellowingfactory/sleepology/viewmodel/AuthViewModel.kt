@@ -107,14 +107,16 @@ class AuthViewModel: ViewModel() {
         }
     }
 
-    fun getCurrentAuthSession() {
+    fun getCurrentAuthSession(onComplete: (Boolean) -> Unit) {
         apiNodeServer.fetchCurrentAuthSession { name, session ->
             name?.let { username.value = name }
             viewModelScope.launch(Dispatchers.Main) {
                 if (session.isSignedIn) {
                     navigateTo("session")
+                    onComplete(true)
                 } else {
                     navigateTo("login")
+                    onComplete(false)
                 }
 
             }
