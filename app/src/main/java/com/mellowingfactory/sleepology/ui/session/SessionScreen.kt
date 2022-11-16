@@ -52,8 +52,8 @@ fun SessionScreen(viewModel: AuthViewModel, statisticsViewModel: StatisticsViewM
             .verticalScroll(scrollableState),
     ) {
         Text(text = "YOU HAVE LOGGED IN")
-        Button(onClick = viewModel::logOut) {
-            Text(text = "Log Out")
+        Button(onClick = viewModel::logOut, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)) {
+            Text(text = "Log Out", color = Color.White)
         }
 
         Spacer(modifier = Modifier.height(100.dp))

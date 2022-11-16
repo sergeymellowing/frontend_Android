@@ -16,14 +16,14 @@ data class ApiNodeUser (
 )
 
 data class CreateApiNodeUserRequest (
-    val item: ApiNodeUser
+    var item: ApiNodeUser
     )
 
 data class GetApiNodeUserResponse (
-    val data: ApiNodeUser
+    var data: ApiNodeUser
 )
 
 data class UpdateApiNodeUserRequest (
-    val id: String,
-    val item: ApiNodeUser
+    var id: String,
+    var item: ApiNodeUser
 )

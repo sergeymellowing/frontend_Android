@@ -5,7 +5,6 @@ import android.util.Log
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
-import com.amplifyframework.api.rest.RestResponse.Data
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -255,7 +254,6 @@ class ApiNodeServer {
         val gson = Gson()
         val jsonObject = gson.toJson(updateApiNodeUserRequest)
         val body = jsonObject.toString().toByteArray()
-        val data = Data(body)
         println("updateApiNodeUserRequest $updateApiNodeUserRequest")
         println("jsonObject $jsonObject")
         println("body ${String(body, Charsets.UTF_8)}")
@@ -264,9 +262,11 @@ class ApiNodeServer {
             .addBody(body)
             .build()
 
+
         Amplify.API.post(API_NAME, request,
             {
-                println(request)
+//                println("request data:")
+//                println(String(request.data))
                 val result = it.data.asJSONObject().toString()
                 Log.i("MyAmplifyApp", "UPDATE apiNodeUser succeeded: $result")
                 onComplete(true)
@@ -419,7 +419,7 @@ class ApiNodeServer {
     }
 
     fun updateDevice(id: String, device: IotDevice, onComplete: (Boolean) -> Unit) {
-        val updateIotDeviceRequest = UpdateIotDeviceRequest(id, UpdateBody(device.id!!, device.rev!!, device.fv!!, device.mode))
+        val updateIotDeviceRequest = UpdateIotDeviceRequest(device.id!!, UpdateBody(id, device.rev!!, device.fv!!, device.mode))
         val gson = Gson()
         val jsonObject = gson.toJson(updateIotDeviceRequest)
         val body = jsonObject.toString().toByteArray()
